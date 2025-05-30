@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+
+        }
+
+        header {
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 1.2em;
+            text-align: center;
+            background-color: #0692f0;
+        }
+
+        main {
+         
+            background-color: #6894e6;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            /* max-width: 900px; */
+            margin: 2rem auto;
+            padding: 1rem;
+            background: #ffffff;
+            color: #222;
+        }
+
+        h1 {
+            text-align: center;
+            color: #007acc;
+        }
+
+        #images-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 16px;
+            margin-top: 2rem;
+        }
+
+        .image-card {
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            background: #f9f9f9;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 8px;
+            transition: transform 0.3s ease;
+        }
+
+        .image-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+        }
+
+        .image-card img {
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+            object-fit: cover;
+            max-height: 180px;
+        }
+
+        .caption {
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+            color: #555;
+            word-break: break-word;
+            text-align: center;
+        }
+
+        #loading {
+            text-align: center;
+            font-size: 1.25rem;
+            color: #555;
+            margin-top: 3rem;
+        }
+
+        #error-message {
+            color: #cc0000;
+            font-weight: bold;
+            text-align: center;
+            margin-top: 3rem;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>Zdjęcia</h1>
+    </header>
+    <main>
+        <section class="zdjęcia">
+
+        </section>
+    </main>
+
+
+<h1>Dynamiczna galeria zdjęć z repozytorium GitHub</h1>
+
+<div id="loading">Ładowanie zdjęć...</div>
+<div id="error" style="display:none;"></div>
+<div class="gallery" id="galleryContainer">
+  <!-- Zdjęcia zostaną dodane dynamicznie tutaj -->
+</div>
+
+<script>
+  // Podstawowe dane repozytorium GitHub
+  const owner = "Guliii1";  // np. "mojlogin"
+  const repo = "zdjecia";        // np. "mojrepozytorium"
+  const folderPath = "img";               // ścieżka do folderu ze zdjęciami w repo, np. "images"
+  const allowedExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.bmp', '.webp'];
+
+  const gallery = document.getElementById('galleryContainer');
+  const loading = document.getElementById('loading');
+  const errorDiv = document.getElementById('error');
+
+  // Funkcja filtrująca pliki - czy jest to obraz
+  function isImageFile(filename) {
+    return allowedExtensions.some(ext => filename.toLowerCase().endsWith(ext));
+  }
+
+  // Funkcja do pobrania listy plików z GitHub API
+  async function fetchImages() {
+    const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${folderPath}`;
+    try {
+      const response = await fetch(apiUrl);
+      if (!response.ok) {
+        throw new Error('Nie udało się pobrać listy plików z GitHub: ' + response.statusText);
+      }
+      const files = await response.json();
+      
+      // Filtrujemy tylko pliki będące obrazami
+      const images = files.filter(file => file.type === 'file' && isImageFile(file.name));
+      if (images.length === 0) {
+        loading.textContent = "Brak zdjęć w wybranym folderze.";
+        return;
+      }
+      loading.style.display = 'none';
+
+      // Dodajemy zdjęcia do galerii
+      images.forEach(image => {
+        const img = document.createElement('img');
+        // Bezpośredni link do pliku raw w GitHub
+        // Format: https://raw.githubusercontent.com/{owner}/{repo}/{branch}/{folderPath}/{fileName}
+        // Załóżmy główna gałąź to 'main' lub 'master' - możesz to zmienić jeśli trzeba
+        const branch = "main"; // <- zmień "main" na "master" jeśli Twoja główna gałąź nazywa się master
+        img.src = `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${folderPath}/${image.name}`;
+        img.alt = image.name;
+        gallery.appendChild(img);
+      });
+    } catch (error) {
+      loading.style.display = 'none';
+      errorDiv.style.display = 'block';
+      errorDiv.textContent = error.message;
+    }
+  }
+
+  window.onload = fetchImages;
+</script>
+
+</body>
+</html>
+
